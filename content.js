@@ -5,12 +5,15 @@ function injectScript(file, node) {
     s.setAttribute('src', file);
     th.appendChild(s);
 }
-
+console.log("content script");
 // content.js
 chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
-    if( request.message === "clicked_browser_action" ) {
-      injectScript( chrome.extension.getURL('inject.js'), 'body');
-    }
-  }
+	function(request, sender, sendResponse) {
+	  	console.log(request.message);
+	    if( request.message === "clicked_browser_action" ) {
+	      	console.log("message received");
+		    injectScript( chrome.extension.getURL('inject.js'), 'body');
+		    console.log("getting url...");
+	    }
+	}
 );

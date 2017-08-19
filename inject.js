@@ -37,7 +37,9 @@ try{
 		analytics.debug();
 		location.reload();
 		alert(message);
+	}else{
+		alert("Nothing to see here");
 	}
 }catch(err){
-	alert(`Intercom is not defined. \nError: ${err})`;
+	alert(`Intercom is not defined. \nError: ${err}`);
 }
