@@ -3,7 +3,7 @@
 
 	"name": "Intercom Analyser",
 	"description": "This extension checks for the existence of Intercom on a webpage",
-	"version": "0.2",
+	"version": "0.3",
 
 	"content_scripts": [
 	  {
