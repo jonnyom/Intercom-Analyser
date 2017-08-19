@@ -5,13 +5,15 @@ function injectScript(file, node) {
     s.setAttribute('src', file);
     th.appendChild(s);
 }
-console.log("content script");
+var receivedMessage = false;
+
 // content.js
 chrome.runtime.onMessage.addListener(
 	function(request, sender, sendResponse) {
 	  	console.log(request.message);
-	    if( request.message === "clicked_browser_action" ) {
-	      	console.log("message received");
+	    if( request.message === "clicked_browser_action" && receivedMessage==false) {
+	    	receivedMessage=true;
+	      	console.log("message received: " + receivedMessage);
 		    injectScript( chrome.extension.getURL('inject.js'), 'body');
 		    console.log("getting url...");
 	    }
