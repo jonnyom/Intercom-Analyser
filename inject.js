@@ -1,15 +1,21 @@
+var w = window;
+
 try{
-	if(typeof window.intercomSettings !== "undefined"){
+	if(typeof w.intercomSettings !== "undefined"){
+		console.log("Calling Intercom('update');...")
 		Intercom('update');
-		var app_id = window.intercomSettings.app_id;
+		var app_id = w.intercomSettings.app_id;
 		var company_id;
 		var company_name;
-		if(typeof window.intercomSettings.company!== "undefined"){
-			company_id = window.intercomSettings.company.id;
-			company_name = window.intercomSettings.company.name;
+		console.log("Checking for company information");
+		if(typeof w.intercomSettings.company!== "undefined"){
+			company_id = w.intercomSettings.company.id;
+			company_name = w.intercomSettings.company.name;
+			console.log(`Company information exists: ${company_name}, ${company_id}`);
 		}
-		var user_id = window.intercomSettings.user_id;
-		var email = window.intercomSettings.email;
+		console.log("Checking for user information...");
+		var user_id = w.intercomSettings.user_id;
+		var email = w.intercomSettings.email;
 		var message = `Intercom is defined. \nAPP_ID: ${app_id}`;
 		if(typeof user_id !== "undefined"){
 			message+= `\nUser ID: ${user_id}`;
@@ -32,10 +38,28 @@ try{
 			message+= `\nCompany Name is null.`;
 		}
 		alert(message);
-	}else if (typeof window.intercomSettings === "undefined" && typeof window.analytics.identify()!=="undefined"){
+	}else if (typeof w.intercomSettings === "undefined" && typeof w.analytics.identify()!=="undefined"){
 		var message = "Intercom is probably defined using Segment - check console for Analytics. \nYou are looking for a user object \nanalytics:user identify {user_id}";
-		analytics.debug();
-		location.reload();
+		// var output = analytics.debug();
+		if(w.location.href.indexOf("refresh")){
+			console.log("Location has already been refreshed");
+			// alert(JSON.stringify(analytics.debug()));
+		}else{
+			console.log("Calling analytics.debug()...");
+			w.analytics.debug();
+			console.log('Adding hash fragment to URL...')
+			w.location = window.location.href + "#refresh";
+			console.log("Reloading page...");
+			w.location.reload();
+		}
+		
+		// sessionStorage.reloadAfterPageLoad = false;
+		// $( function () {
+		//     if ( sessionStorage.reloadAfterPageLoad ) {
+		//         alert(JSON.stringify(output));
+		//         sessionStorage.reloadAfterPageLoad = true;
+		//     }
+		// });
 		alert(message);
 	}else{
 		alert("Nothing to see here");
