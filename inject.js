@@ -1,15 +1,21 @@
 var w = window;
 
+function sendMessage(){
+	var data = {type: "FROM_INJECT", text: "sent_update_function"};
+	w.postMessage(data, "*")
+}
+
 try{
 	if(typeof w.intercomSettings !== "undefined"){
 		console.log("Calling Intercom('update');...")
 		Intercom('update');
+		sendMessage();
 		var app_id = w.intercomSettings.app_id;
 		var company_id;
 		var company_name;
 		console.log("Checking for company information");
 		if(typeof w.intercomSettings.company!== "undefined"){
-			company_id = w.intercomSettings.company.id;
+		ny_id = w.intercomSettings.company.id;
 			company_name = w.intercomSettings.company.name;
 			console.log(`Company information exists: ${company_name}, ${company_id}`);
 		}
@@ -20,12 +26,12 @@ try{
 		if(typeof user_id !== "undefined"){
 			message+= `\nUser ID: ${user_id}`;
 		}else{
-			message+= `\nUser ID is null.`;
+			message+= `\nUser ID is null, registered as a Lead.`;
 		}
 		if(typeof email !== "undefined"){
 			message+= `\nEmail: ${email}`;
 		}else{
-			message+= `\nEmail is null.`;
+			message+= `\nEmail is null, registered as a Lead.`;
 		}
 		if(typeof company_id !== "undefined"){
 			message+= `\nCompany ID: ${company_id}`;
@@ -38,7 +44,9 @@ try{
 			message+= `\nCompany Name is null.`;
 		}
 		alert(message);
-	}else if (typeof w.intercomSettings === "undefined" && typeof w.analytics.identify()!=="undefined"){
+	}else if (typeof w.intercomSettings === "undefined" 
+		&& typeof w.analytics.identify()!=="undefined"){
+
 		var message = "Intercom is probably defined using Segment - check console for Analytics. \nYou are looking for a user object \nanalytics:user identify {user_id}";
 		// var output = analytics.debug();
 		if(w.location.href.indexOf("refresh")){

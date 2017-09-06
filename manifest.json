@@ -11,14 +11,19 @@
 	    "js": ["content.js"]
 	  }  
 	],
+
 	"background": {
 		"scripts": ["background.js"]
 	},
+
 	"web_accessible_resources" : ["inject.js"],
 	"browser_action": {
   		"default_icon": "intercom.png"
 	},
 	"permissions": [
-        "tabs", "<all_urls>"
+        "tabs", "<all_urls>",
+        "webRequest",
+        "https://*.intercom.com/",
+        "https://*.intercom.io/"
     ]
 }
