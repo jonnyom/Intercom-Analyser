@@ -17,9 +17,13 @@
 	},
 
 	"web_accessible_resources" : ["inject.js"],
+
 	"browser_action": {
-  		"default_icon": "intercom.png"
+  		"default_icon": "intercom.png",
+  		"defualt_title": "Intercom Analyser",
+  		"default_popup": "popup.html"
 	},
+
 	"permissions": [
         "tabs", "<all_urls>",
         "webRequest",
