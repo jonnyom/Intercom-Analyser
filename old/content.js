@@ -2,6 +2,7 @@ var receivedBkgMessage = false;
 var receivedInjMessage = false;
 var w = window;
 
+
 function injectScript(file, node) {
     var th = document.getElementsByTagName(node)[0];
     var s = document.createElement('script');
@@ -9,6 +10,8 @@ function injectScript(file, node) {
     s.setAttribute('src', file);
     th.appendChild(s);
 }
+
+
 
 // content.js
 chrome.runtime.onMessage.addListener(

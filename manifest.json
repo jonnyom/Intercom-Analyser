@@ -23,6 +23,7 @@
 	"permissions": [
         "tabs", "<all_urls>",
         "webRequest",
+        "webRequestBlocking",
         "https://*.intercom.com/",
         "https://*.intercom.io/"
     ]

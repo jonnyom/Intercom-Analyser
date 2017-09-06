@@ -43,10 +43,10 @@ try{
 		}else{
 			message+= `\nCompany Name is null.`;
 		}
-		alert(message);
+		console.log(message);
 	}else if (typeof w.intercomSettings === "undefined" 
 		&& typeof w.analytics.identify()!=="undefined"){
-
+		sendMessage();
 		var message = "Intercom is probably defined using Segment - check console for Analytics. \nYou are looking for a user object \nanalytics:user identify {user_id}";
 		// var output = analytics.debug();
 		if(w.location.href.indexOf("refresh")){
@@ -60,18 +60,10 @@ try{
 			console.log("Reloading page...");
 			w.location.reload();
 		}
-		
-		// sessionStorage.reloadAfterPageLoad = false;
-		// $( function () {
-		//     if ( sessionStorage.reloadAfterPageLoad ) {
-		//         alert(JSON.stringify(output));
-		//         sessionStorage.reloadAfterPageLoad = true;
-		//     }
-		// });
-		alert(message);
+		console.log(message);
 	}else{
 		alert("Nothing to see here");
 	}
 }catch(err){
-	alert(`Intercom is not defined. \nError: ${err}`);
+	console.log(`Intercom is not defined. \nError: ${err}`);
 }
