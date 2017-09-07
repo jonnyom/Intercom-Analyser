@@ -6,12 +6,44 @@
         <title></title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="background.js"></script>
+        <script src="popup.js"></script>
+        <style src="popup.css" media="screen"></style>
     </head>
     <body>
         <!--[if lt IE 8]>
             <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
 
-        <p>Hello world! This is the popup.html</p>
-    </body>
+
+        <div class="tab">
+            <button class="tablinks" onclick="openTab(event, 'info')">Information</button>
+            <button class="tablinks" onclick="openTab(event, 'status')">Status</button>
+        </div>
+
+        
+        <div id="info" class="tabcontent">
+            <table style="width:100%">
+                <tr>
+                    <th>Installation</th>
+                    <th>App Info</th> 
+                    <th>User Info</th>
+                    <th>Company Info</th>
+                </tr>
+                <tr>
+                    <td id="installType"></td>
+                    <td id="appInfo"></td> 
+                    <td id="userInfo"></td>
+                    <td id="compInfo"></td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="status" class="tabcontent">
+            <h3>Status Code</h3>
+            <p id="statusCode"></p>
+        </div>
+
+    </body>        
+
 </html>
