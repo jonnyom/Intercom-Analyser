@@ -4,12 +4,46 @@ var ping_filter = {urls: ["*://*.intercom.io/messenger/web/ping"]};
 var err_filter = {urls: ["*://*.intrcom.io/*", "*://*.intercom.com/*"]}
 var out_extraInfoSpec = ["blocking", "requestBody"];
 var in_extraInfoSpec = ["responseHeaders"];
+var statusCode;
 
-var taskCompleted = false;
+var postComplete = false;
+var taskComplete = false;
+
+function ensureSendMessage(tabId, message, callback){
+  	chrome.tabs.sendMessage(tabId, {ping: true}, function(response){
+    	if(response && response.pong) { // Content script ready
+      		chrome.tabs.sendMessage(tabId, message, callback);
+  		} else { // No listener on the other end
+      		chrome.tabs.executeScript(tabId, {file: "content.js"}, function(){
+	        	if(chrome.runtime.lastError) {
+	          	console.error(chrome.runtime.lastError);
+	          	throw Error("Unable to inject script into tab " + tabId);
+	        }
+	        // OK, now it's injected and ready
+	        chrome.tabs.sendMessage(tabId, message, callback);
+      		});
+    	}
+	});
+}
+
+// chrome.runtime.onMessage.addListener(function(message){
+// 	if(message.update == "update"){
+// 		console.log("Updating");
+// 		chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+// 		var activeTab = tabs[0];
+// 		ensureSendMessage(activeTab.id, {"message": "clicked_browser_action"});
+// 	});
+// 	}
+// });
+
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if (message.request == "checkStatus") {
-        sendResponse({done: taskCompleted, intercomData: intercomData});
+    	if(!taskComplete){
+    		sendResponse({done: taskComplete});
+    	}else{
+    		sendResponse({done: taskComplete, intercomData: intercomData, statusCode: statusCode});
+    	}
     }
 });
 
@@ -43,8 +77,8 @@ chrome.webRequest.onBeforeRequest.addListener(
 				comp_id: comp_id,
 				comp_name: comp_name
 			};
-			taskCompleted = true;
-		}		
+			postComplete = true;
+		}
 	}, 
 	ping_filter, 
 	out_extraInfoSpec
@@ -52,13 +86,14 @@ chrome.webRequest.onBeforeRequest.addListener(
 
 chrome.webRequest.onHeadersReceived.addListener(
 	function(details){
-		
+		statusCode = JSON.stringify(details.statusCode);
+		taskComplete = true;
 	}, 
 	err_filter
 );	
 
-if (taskCompleted) {
-    chrome.runtime.sendMessage({done: true, intercomData: intercomData});
+if (taskComplete) {
+    chrome.runtime.sendMessage({done: true, intercomData: intercomData, statusCode: statusCode});
 }
 
 // chrome.runtime.onMessage.addListener(
@@ -76,19 +111,4 @@ if (taskCompleted) {
 //     }
 // );
 
-function ensureSendMessage(tabId, message, callback){
-  	chrome.tabs.sendMessage(tabId, {ping: true}, function(response){
-    	if(response && response.pong) { // Content script ready
-      		chrome.tabs.sendMessage(tabId, message, callback);
-  		} else { // No listener on the other end
-      		chrome.tabs.executeScript(tabId, {file: "content.js"}, function(){
-	        	if(chrome.runtime.lastError) {
-	          	console.error(chrome.runtime.lastError);
-	          	throw Error("Unable to inject script into tab " + tabId);
-	        }
-	        // OK, now it's injected and ready
-	        chrome.tabs.sendMessage(tabId, message, callback);
-      		});
-    	}
-	});
-}
+

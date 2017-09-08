@@ -8,18 +8,18 @@
 	"content_scripts": [
 	  {
 	    "matches": ["<all_urls>"],
-	    "js": ["content.js"]
+	    "js": ["javascript/content.js"]
 	  }  
 	],
 
 	"background": {
-		"scripts": ["background.js"]
+		"scripts": ["javascript/background.js"]
 	},
 
 	"web_accessible_resources" : ["inject.js"],
 
 	"browser_action": {
-  		"default_icon": "intercom.png",
+  		"default_icon": "img/intercom.png",
   		"defualt_title": "Intercom Analyser",
   		"default_popup": "popup.html"
 	},
