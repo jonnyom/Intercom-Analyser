@@ -15,12 +15,25 @@ function injectScript(file, node) {
 chrome.runtime.onMessage.addListener(
 	function(request, sender, sendResponse) {
 	  	console.log(request.message);
-	    if( request.message === "clicked_browser_action" && receivedBkgMessage==false) {
+	    if( request.message === "check_for_update" && receivedBkgMessage===false) {
 	    	console.log("Received Message from Background");
 	    	receivedBkgMessage=true;
 	      	console.log(`message received: ${receivedBkgMessage}`);
-		    injectScript( chrome.extension.getURL('inject.js'), 'body');
+		    injectScript( chrome.extension.getURL('javascript/inject.js'), 'body');
 		    console.log("getting url...");
+		    sendResponse({pong: true});
 	    }
 	}
 );
+
+chrome.extension.onMessage.addListener(function(message){
+	if(message.message === "intercomsettings_data"){
+		chrome.runtime.sendMessage({message: "intercomsettings_data_content",
+			intercomData: message.intercomData});
+	}
+});
+
+//if the html hasn't yet been populated query the background file again to try and get the information
+// keep polling the background file until the information has been received
+// display some sort of loading screen while the html page doesn't load properly
+// profit

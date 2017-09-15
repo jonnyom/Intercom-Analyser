@@ -1,22 +1,5 @@
 var d = document;
 
-function ensureSendMessage(tabId, message, callback){
-  	chrome.tabs.sendMessage(tabId, {ping: true}, function(response){
-    	if(response && response.pong) { // Content script ready
-      		chrome.tabs.sendMessage(tabId, message, callback);
-  		} else { // No listener on the other end
-      		chrome.tabs.executeScript(tabId, {file: "content.js"}, function(){
-	        	if(chrome.runtime.lastError) {
-	          	console.error(chrome.runtime.lastError);
-	          	throw Error("Unable to inject script into tab " + tabId);
-	        }
-	        // OK, now it's injected and ready
-	        chrome.tabs.sendMessage(tabId, message, callback);
-      		});
-    	}
-	});
-}
-
 window.addEventListener('DOMContentLoaded', function () {
     console.log("Dom Ready");
 
@@ -74,21 +57,52 @@ window.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function populateIntercomSettings(info){
+        installType.innerHTML = "<p>Information found by querying intercomSettings. Not necessarily reliable</p>";
+        appInfo.innerHTML = `App ID: ${info.app_id}`;
+
+        if(typeof info.user_id === "undefined"){
+            userInfo.innerHTML = "<br>Current user is a lead";
+        }else{
+            userInfo.innerHTML = `<br>User Name: ${info.name}\nEmail: ${info.email}\nUser ID: ${info.user_id}`;
+        }
+
+        if(info.comp_id !== null){
+            compInfo.innerHTML = `<br>Company Name: ${info.comp_name}\nCompany ID: ${info.comp_id}`;
+        }
+    }
+
     // updateBtn.addEventListener("click", function(e)){
     //     chrome.runtime.sendMessage({update: "update"});
     // }, false);
 
 
     chrome.runtime.sendMessage({request: "checkStatus"}, function(response) {
+        console.log("Checking status...");
         if (response.done) {
+            console.log("Good to go! Post and Status alright");
             console.log(response.intercomData);
             populate(response.intercomData);
             console.log(response.statusCode);
             populateStatus(response.statusCode);
+        }else if(response.postComplete){
+            console.log("Post is complete, but status is uncertain");
+            console.log(response.intercomData);
+            populate(response.intercomData);
+            console.log(response.statusCode);
+            populateStatus(response.statusCode);
+        }else{
+            console.log("Haven't received a response");
+            chrome.runtime.onMessage.addListener(function(message){
+               if(message.message === "intercomsettings_data_content"){
+                   populateIntercomSettings(message.intercomData);
+               }
+            });
         }
     });
 
     chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+        console.log("Received message");
         if (message.done) {
             console.log(message.intercomData);
             populate(message.intercomData);
