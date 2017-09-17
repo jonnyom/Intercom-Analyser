@@ -1,14 +1,14 @@
 <!doctype html>
-<html class="no-js" lang="">
+<html lang="en">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="x-ua-compatible" content="ie=edge">
         <title></title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <script src="javascript/background.js"></script>
         <script src="javascript/popup.js"></script>
-        <style src="styles/popup.css" media="screen"></style>
+        <script src="javascript/background.js"></script>
+        <link rel="stylesheet" href="styles/popup.css" media="screen" type="text/css">
     </head>
     <body>
         <!--[if lt IE 8]>
@@ -17,32 +17,18 @@
 
 
         <div class="tab">
-            <button class="tablinks" onclick="openTab(event, 'info')">Information</button>
-            <button class="tablinks" onclick="openTab(event, 'status')">Status</button>
+            <button class="tablinks" id="informationButton">Information</button>
+            <button class="tablinks" id="statusButton">Status</button>
         </div>
 
         
         <div id="info" class="tabcontent">
-            <table style="width:100%">
-                <tr>
-                    <th>Installation</th>
-                    <th>App Info</th> 
-                    <th>User Info</th>
-                    <th>Company Info</th>
-                </tr>
-                <tr>
-                    <td id="installType"></td>
-                    <td id="appInfo"></td> 
-                    <td id="userInfo"></td>
-                    <td id="compInfo"></td>
-                    <!-- <button id="updateBtn">Update Intercom</button> -->
-                </tr>
-            </table>
+            <div class="loader" id="infoLoader"></div>
+            <button id="updateBtn">Update Intercom</button>
         </div>
 
         <div id="status" class="tabcontent">
-            <h3>Status Code</h3>
-            <p id="statusCode"></p>
+            <div class="loader" id="statusLoader"></div>
         </div>
 
     </body>        

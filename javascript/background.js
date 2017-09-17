@@ -1,12 +1,9 @@
-var ping_filter = {urls: ["*://*.intercom.io/messenger/web/ping"]};
-var err_filter = {urls: ["*://*.intrcom.io/*", "*://*.intercom.com/*"]}
-var out_extraInfoSpec = ["blocking", "requestBody"];
-var statusCode;
+let ping_filter = {urls: ["*://*.intercom.io/messenger/web/ping"]};
+let err_filter = {urls: ["*://*.intrcom.io/*", "*://*.intercom.com/*"]}
+let out_extraInfoSpec = ["blocking", "requestBody"];
 
-var postComplete = false;
-var taskComplete = false;
-
-var currentURL = "";
+let postComplete = false;
+let statusComplete = false;
 
 function ensureSendMessage(tabId, message, callback){
   	chrome.tabs.sendMessage(tabId, {ping: true}, function(response){
@@ -27,7 +24,7 @@ function ensureSendMessage(tabId, message, callback){
 
 function insertUpdateCall(){
 	chrome.tabs.query({active:true, currentWindow: true}, function(tabs){
-        var activeTab = tabs[0];
+        let activeTab = tabs[0];
         ensureSendMessage(activeTab.id, {message: "check_for_update"});
 	});
 }
@@ -64,41 +61,49 @@ chrome.runtime.onMessage.addListener(function(message){
 	}
 });
 
-chrome.extension.onMessage.addListener(function(message, sender, sendResponse) {
-    if (message.request === "checkStatus") {
-    	if(!taskComplete){
-    		console.log("Task not yet complete...");
-            sendResponse({done: taskComplete});
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.request === "checkData") {
+    	if(!postComplete){
+    		console.log("Post not yet complete...");
+            sendResponse({done: postComplete});
     	}else{
-                console.log("Task complete");
-                sendResponse({done: taskComplete, intercomData: intercomData, statusCode: statusCode});
+            console.log("Task complete");
+            sendResponse({done: postComplete, intercomData: intercomData});
 		}
-
-        if(!taskComplete && postComplete) {
-    		console.log("post is complete tho...");
-            sendResponse({postComplete: postComplete, intercomData: intercomData, statusCode: "Couldn't connect to Intercom"});
-        }
 	}
 	return true;
+});
+
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse){
+   if(message.request === "checkStatus"){
+       if(!statusComplete){
+           console.log("Status not found...");
+           sendResponse({done: statusComplete});
+       }else{
+           console.log("Status found");
+           sendResponse({done: statusComplete, status: statusCode});
+       }
+
+   }
 });
 
 chrome.webRequest.onBeforeRequest.addListener(
 	function (details){
         console.log("In on before request");
-        var FORM_DATA = details["requestBody"]["formData"];
-		var	USER_DATA = JSON.parse(FORM_DATA["user_data"]);
-		var	COMP_DATA = USER_DATA["company"];
+        const FORM_DATA = details["requestBody"]["formData"];
+		const USER_DATA = JSON.parse(FORM_DATA["user_data"]);
+		const COMP_DATA = USER_DATA["company"];
 		if(details.method==="POST"){
 
-			var install = FORM_DATA["i"];
-			var app_id = FORM_DATA["app_id"];
+			let install = FORM_DATA["i"];
+			let app_id = FORM_DATA["app_id"];
 			
-			var user_id = USER_DATA["user_id"];
-			var email = USER_DATA["email"];
-			var name = USER_DATA["name"];
+			let user_id = USER_DATA["user_id"];
+			let email = USER_DATA["email"];
+			let name = USER_DATA["name"];
 			
-			var comp_id = null;
-			var comp_name = null;
+			let comp_id = null;
+			let comp_name = null;
 			
 			if(typeof COMP_DATA !== "undefined") {
                 console.log("Company data isn't undefined");
@@ -133,12 +138,7 @@ chrome.webRequest.onHeadersReceived.addListener(
 	function(details){
 		console.log("Headers received");
 		statusCode = JSON.stringify(details.statusCode);
-		taskComplete = true;
+		statusComplete = true;
 	}, 
 	err_filter
-);	
-
-if (taskComplete) {
-	console.log("Task completed in other function");
-    chrome.runtime.sendMessage({done: true, intercomData: intercomData, statusCode: statusCode});
-}
+);

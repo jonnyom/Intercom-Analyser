@@ -1,18 +1,24 @@
-var d = document;
+let d = document;
+let intercomData = null;
+let status = null;
 
 window.addEventListener('DOMContentLoaded', function () {
     console.log("Dom Ready");
 
-    var installType = d.getElementById("installType");
-    var appInfo = d.getElementById("appInfo");
-    var userInfo = d.getElementById("userInfo");
-    var compInfo = d.getElementById("compInfo");
-    var statusCode = d.getElementById("statusCode");
-    // var updateBtn = d.getElementById("updateBtn");
+
+
+    let infoLoader = d.getElementById("infoLoader");
+    let statusLoader = d.getElementById("statusLoader");
+
+    let infoButton = d.getElementById("informationButton");
+    let statusButton = d.getElementById("statusButton");
+
+    let updateBtn = d.getElementById("updateBtn");
+
 
     function openTab(evt, tabName) {
         // Declare all variables
-        var i, tabcontent, tablinks;
+        let i, tabcontent, tablinks;
 
         // Get all elements with class="tabcontent" and hide them
         tabcontent = document.getElementsByClassName("tabcontent");
@@ -32,82 +38,129 @@ window.addEventListener('DOMContentLoaded', function () {
     }
 
     function populateStatus(status){
-        statusCode.innerHTML = status;
+        let statusDiv = d.getElementById("status");
+        let h4Status = d.createElement("h4");
+        h4Status.textContent = status;
+        statusDiv.appendChild(h4Status);
     }
 
-    function populate(info) {
-        if(info.install == "s"){
-            installType.innerHTML = "<br>Installed using Segment.io";
-        }else if(info.install == "g"){
-            installType.innerHTML = "<br>Installed using Google Tag Manager";
+    function populate(intercomData) {
+        let installType, userInfo, appInfo, compInfo;
+        if(intercomData.install == "s"){
+            installType = "Segment.io";
+        }else if(intercomData.install == "g"){
+            installType = "Google Tag Manager";
         }else{
-            installType.innerHTML = "<br>Installed using standard Intercom script";
+            installType = "Intercom script";
         }
 
-        appInfo.innerHTML = `App ID: ${info.app_id}`;
-        
-        if(typeof info.user_id === "undefined"){
-            userInfo.innerHTML = "<br>Current user is a lead";
+        appInfo = `App ID: ${intercomData.app_id}`;
+
+        if(typeof intercomData.user_id === "undefined"){
+            userInfo = "Current user is a lead";
         }else{
-            userInfo.innerHTML = `<br>User Name: ${info.name}\nEmail: ${info.email}\nUser ID: ${info.user_id}`;
+            userInfo = `User Name: ${info.name}<br>Email: ${info.email}<br>User ID: ${info.user_id}`;
         }
-        
-        if(info.comp_id !== null){
-            compInfo.innerHTML = `<br>Company Name: ${info.comp_name}\nCompany ID: ${info.comp_id}`;   
+
+        if(intercomData.comp_id !== null){
+            compInfo = `Company Name: ${info.comp_name}<br>Company ID: ${info.comp_id}`;
+        }else{
+            compInfo = "User has no company information.";
         }
+
+        let infoDiv = d.getElementById("info");
+        let table = d.createElement("table");
+        let tableHead = d.createElement("thead");
+        let tableBody = d.createElement("tbody");
+
+        table.border = "1";
+
+        let trHead = d.createElement("tr");
+
+        let thInstall = d.createElement("th");
+        let thAppId = d.createElement("th");
+        let thUserInfo = d.createElement("th");
+        let thCompInfo = d.createElement("th");
+
+        thInstall.textContent = "Installation";
+        thAppId.textContent = "App ID";
+        thUserInfo.textContent = "User Information";
+        thCompInfo.textContent = "Company Information";
+
+        trHead.appendChild(thInstall);
+        trHead.appendChild(thAppId);
+        trHead.appendChild(thUserInfo);
+        trHead.appendChild(thCompInfo);
+
+        tableHead.appendChild(trHead);
+
+        let trBody = d.createElement("tr");
+
+        let tdInstall = d.createElement("td");
+        let tdAppID = d.createElement("td");
+        let tdUserInfo = d.createElement("td");
+        let tdCompInfo = d.createElement("td");
+
+        tdInstall.textContent = installType;
+        tdAppID.textContent = appInfo;
+        tdUserInfo.textContent = userInfo;
+        tdCompInfo.textContent = compInfo;
+
+        trBody.appendChild(tdInstall);
+        trBody.appendChild(tdAppID);
+        trBody.appendChild(tdUserInfo);
+        trBody.appendChild(tdCompInfo);
+
+        tableBody.appendChild(trBody);
+
+        table.appendChild(tableHead);
+        table.appendChild(tableBody);
+
+        infoDiv.appendChild(table);
     }
 
-    function populateIntercomSettings(info){
-        installType.innerHTML = "<p>Information found by querying intercomSettings. Not necessarily reliable</p>";
-        appInfo.innerHTML = `App ID: ${info.app_id}`;
+    infoButton.addEventListener("click", function(e){
+        console.log("Sending message to update Intercom");
+        chrome.runtime.sendMessage({update: "update_intercom"});
+        openTab(e, 'info');
+    });
+    statusButton.addEventListener("click", function(e){
+        openTab(e, 'status');
+    });
 
-        if(typeof info.user_id === "undefined"){
-            userInfo.innerHTML = "<br>Current user is a lead";
-        }else{
-            userInfo.innerHTML = `<br>User Name: ${info.name}\nEmail: ${info.email}\nUser ID: ${info.user_id}`;
-        }
-
-        if(info.comp_id !== null){
-            compInfo.innerHTML = `<br>Company Name: ${info.comp_name}\nCompany ID: ${info.comp_id}`;
-        }
-    }
-
-    // updateBtn.addEventListener("click", function(e)){
-    //     chrome.runtime.sendMessage({update: "update"});
-    // }, false);
+    updateBtn.addEventListener("click", function(e){
+        chrome.runtime.sendMessage({update: "update_intercom"});
+    });
 
 
-    chrome.runtime.sendMessage({request: "checkStatus"}, function(response) {
-        console.log("Checking status...");
+    chrome.runtime.sendMessage({request: "checkData"}, function(response) {
+        console.log("Checking data...");
         if (response.done) {
-            console.log("Good to go! Post and Status alright");
+            console.log("Data found");
             console.log(response.intercomData);
-            populate(response.intercomData);
-            console.log(response.statusCode);
-            populateStatus(response.statusCode);
-        }else if(response.postComplete){
-            console.log("Post is complete, but status is uncertain");
-            console.log(response.intercomData);
-            populate(response.intercomData);
-            console.log(response.statusCode);
-            populateStatus(response.statusCode);
+            intercomData = response.intercomData;
+            if(intercomData!== null){
+                console.log("Intercom Data: " + JSON.stringify(intercomData));
+                infoLoader.style.visibility = "hidden";
+                populate(intercomData);
+            }
         }else{
-            console.log("Haven't received a response");
-            chrome.runtime.onMessage.addListener(function(message){
-               if(message.message === "intercomsettings_data_content"){
-                   populateIntercomSettings(message.intercomData);
-               }
-            });
+            console.log("Data not found yet");
         }
     });
 
-    chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-        console.log("Received message");
-        if (message.done) {
-            console.log(message.intercomData);
-            populate(message.intercomData);
-            console.log(message.statusCode);
-            populateStatus(message.statusCode);
+    chrome.runtime.sendMessage({request: "checkStatus"}, function(response){
+        console.log("Checking status...");
+        if(response.done){
+            status = response.status;
+            if(status!==null){
+                console.log("Status found: " + status);
+                statusLoader.style.visibility = "hidden";
+                populateStatus(status);
+            }
+        }else{
+            console.log("Status not received..");
         }
+
     });
 });
