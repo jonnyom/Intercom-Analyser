@@ -1,5 +1,5 @@
 let ping_filter = {urls: ["*://*.intercom.io/messenger/web/ping"]};
-let err_filter = {urls: ["*://*.intrcom.io/*", "*://*.intercom.com/*"]}
+let err_filter = {urls: ["*://*.intercom.io/*", "*://*.intercom.com/*"]}
 let out_extraInfoSpec = ["blocking", "requestBody"];
 
 let postComplete = false;

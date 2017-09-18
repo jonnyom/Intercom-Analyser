@@ -1,4 +1,5 @@
 let d = document;
+let oldData = null;
 let intercomData = null;
 let status = null;
 
@@ -39,32 +40,57 @@ window.addEventListener('DOMContentLoaded', function () {
 
     function populateStatus(status){
         let statusDiv = d.getElementById("status");
-        let h4Status = d.createElement("h4");
+        let h4Status = d.createElement("h3");
         h4Status.textContent = status;
         statusDiv.appendChild(h4Status);
     }
 
+    function populateRows(body, installType, appInfo, userInfo, compInfo){
+
+        let trBody = d.createElement("tr");
+
+        let tdInstall = d.createElement("td");
+        let tdAppID = d.createElement("td");
+        let tdUserInfo = d.createElement("td");
+        let tdCompInfo = d.createElement("td");
+
+        tdInstall.textContent = installType;
+        tdAppID.textContent = appInfo;
+        tdUserInfo.textContent = userInfo;
+        tdCompInfo.textContent = compInfo;
+
+        trBody.appendChild(tdInstall);
+        trBody.appendChild(tdAppID);
+        trBody.appendChild(tdUserInfo);
+        trBody.appendChild(tdCompInfo);
+
+        body.appendChild(trBody);
+
+        return body;
+    }
+
     function populate(intercomData) {
+        oldData = intercomData;
+
         let installType, userInfo, appInfo, compInfo;
-        if(intercomData.install == "s"){
+        if (oldData.install[0] === "s") {
+            console.log("Installed with Segment");
             installType = "Segment.io";
-        }else if(intercomData.install == "g"){
-            installType = "Google Tag Manager";
-        }else{
+        } else {
             installType = "Intercom script";
         }
 
-        appInfo = `App ID: ${intercomData.app_id}`;
+        appInfo = `App ID: ${oldData.app_id}`;
 
-        if(typeof intercomData.user_id === "undefined"){
+        if (typeof oldData.user_id === "undefined") {
             userInfo = "Current user is a lead";
-        }else{
-            userInfo = `User Name: ${info.name}<br>Email: ${info.email}<br>User ID: ${info.user_id}`;
+        } else {
+            userInfo = `User Name: ${oldData.name}<br>Email: ${oldData.email}<br>User ID: ${oldData.user_id}`;
         }
 
-        if(intercomData.comp_id !== null){
-            compInfo = `Company Name: ${info.comp_name}<br>Company ID: ${info.comp_id}`;
-        }else{
+        if (oldData.comp_id !== null) {
+            compInfo = `Company Name: ${oldData.comp_name}<br>Company ID: ${oldData.comp_id}`;
+        } else {
             compInfo = "User has no company information.";
         }
 
@@ -73,7 +99,7 @@ window.addEventListener('DOMContentLoaded', function () {
         let tableHead = d.createElement("thead");
         let tableBody = d.createElement("tbody");
 
-        table.border = "1";
+        table.border = ".5";
 
         let trHead = d.createElement("tr");
 
@@ -94,24 +120,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
         tableHead.appendChild(trHead);
 
-        let trBody = d.createElement("tr");
-
-        let tdInstall = d.createElement("td");
-        let tdAppID = d.createElement("td");
-        let tdUserInfo = d.createElement("td");
-        let tdCompInfo = d.createElement("td");
-
-        tdInstall.textContent = installType;
-        tdAppID.textContent = appInfo;
-        tdUserInfo.textContent = userInfo;
-        tdCompInfo.textContent = compInfo;
-
-        trBody.appendChild(tdInstall);
-        trBody.appendChild(tdAppID);
-        trBody.appendChild(tdUserInfo);
-        trBody.appendChild(tdCompInfo);
-
-        tableBody.appendChild(trBody);
+        tableBody = populateRows(tableBody, installType, appInfo, userInfo, compInfo);
 
         table.appendChild(tableHead);
         table.appendChild(tableBody);
@@ -119,48 +128,79 @@ window.addEventListener('DOMContentLoaded', function () {
         infoDiv.appendChild(table);
     }
 
+    function populateError(){
+        let infoDiv = d.getElementById("info");
+
+        let pInfo = d.createElement("p");
+        pInfo.textContent = "Intercom hasn't been booted on this page...";
+        infoDiv.appendChild(pInfo);
+    }
+
+
     infoButton.addEventListener("click", function(e){
         console.log("Sending message to update Intercom");
         chrome.runtime.sendMessage({update: "update_intercom"});
+        if(intercomData!== null){
+            checkData();
+            console.log("Update: "+ JSON.stringify(intercomData));
+        }else{
+            populateError();
+        }
         openTab(e, 'info');
     });
+
     statusButton.addEventListener("click", function(e){
+        checkStatus();
         openTab(e, 'status');
     });
 
-    updateBtn.addEventListener("click", function(e){
+    updateBtn.addEventListener("click", function(){
         chrome.runtime.sendMessage({update: "update_intercom"});
     });
 
-
-    chrome.runtime.sendMessage({request: "checkData"}, function(response) {
-        console.log("Checking data...");
-        if (response.done) {
-            console.log("Data found");
-            console.log(response.intercomData);
-            intercomData = response.intercomData;
-            if(intercomData!== null){
-                console.log("Intercom Data: " + JSON.stringify(intercomData));
-                infoLoader.style.visibility = "hidden";
-                populate(intercomData);
+    function checkData(){
+        chrome.runtime.sendMessage({request: "checkData"}, function(response) {
+            console.log("Checking data...");
+            if (response.done) {
+                console.log("Data found");
+                console.log(response.intercomData);
+                intercomData = response.intercomData;
+                if(intercomData!== null){
+                    console.log("Intercom Data: " + JSON.stringify(intercomData));
+                    infoLoader.style.visibility = "hidden";
+                    oldData = intercomData;
+                    populate(intercomData);
+                }
+            }else{
+                console.log("Data not found yet");
             }
-        }else{
-            console.log("Data not found yet");
-        }
-    });
+        });
+    }
 
-    chrome.runtime.sendMessage({request: "checkStatus"}, function(response){
-        console.log("Checking status...");
-        if(response.done){
-            status = response.status;
-            if(status!==null){
-                console.log("Status found: " + status);
-                statusLoader.style.visibility = "hidden";
-                populateStatus(status);
+    function checkStatus(){
+        chrome.runtime.sendMessage({request: "checkStatus"}, function(response){
+            console.log("Checking status...");
+            if(response.done){
+                status = response.status;
+                if(status!==null){
+                    console.log("Status found: " + status);
+                    statusLoader.style.visibility = "hidden";
+                    populateStatus(status);
+                }
+            }else{
+                console.log("Status not received..");
             }
-        }else{
-            console.log("Status not received..");
-        }
 
-    });
+        });
+    }
+
+    chrome.runtime.onMessage.addListener(function(message){
+        if(message.message==="not_defined" && message.booted === false){
+            console.log("Intercom not installed on current page")
+            populateError();
+        }
+    })
+
+    checkData();
+    checkStatus();
 });
