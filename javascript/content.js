@@ -9,11 +9,8 @@ function injectScript(file, node) {
 // content.js
 chrome.runtime.onMessage.addListener(
 	function(request, sender, sendResponse) {
-	  	console.log(request.message);
 	    if( request.message === "update") {
-	    	console.log("Received Message from Background");
 		    injectScript(chrome.extension.getURL('javascript/functions/update.js'), 'body');
-		    console.log("Injecting script...");
 		    sendResponse({pong: true});
 	    }
 	}
@@ -21,11 +18,8 @@ chrome.runtime.onMessage.addListener(
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-        console.log(request.message);
         if( request.message === "shutdown") {
-            console.log("Received Message from Background");
             injectScript(chrome.extension.getURL('javascript/functions/shutdown.js'), 'body');
-            console.log("Injecting script...");
             sendResponse({pong: true});
         }
     }
@@ -33,11 +27,8 @@ chrome.runtime.onMessage.addListener(
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-        console.log(request.message);
         if( request.message === "boot") {
-            console.log("Received Message from Background");
             injectScript(chrome.extension.getURL('javascript/functions/boot.js'), 'body');
-            console.log("Injecting script...");
             sendResponse({pong: true});
         }
     }

@@ -1,3 +1,9 @@
+body { /* The actual box, centered in the fixed-position div */
+    width: 350px; /* Whatever width you want the box to be */
+    position: relative;
+    margin: 0 auto;
+}
+
 /* Style the tab */
 div.tab {
     overflow: hidden;

@@ -39,19 +39,12 @@ window.addEventListener('DOMContentLoaded', function () {
 
     function populateStatus(headers){
         let statusDiv = d.getElementById("status");
-        let lastUrl = null;
-        let lastStatus = null;
         for(let i = 0; i<headers.length; i++){
             let details = d.createElement("p");
             let url = JSON.stringify(headers[i].url);
             let status = JSON.stringify(headers[i].statusCode);
-            if(lastUrl!==url && lastStatus!==status){
-                lastUrl = url;
-                lastStatus = status;
-            }else{
-                continue;
-            }
-            details.textContent = url + ": " + status;
+            let method = JSON.stringify(headers[i].method);
+            details.textContent = url + ": " + status + " method: " + method;
             statusDiv.appendChild(details);
         }
     }
@@ -83,31 +76,28 @@ window.addEventListener('DOMContentLoaded', function () {
     function populate(error, intercomData) {
         let infoDiv = d.getElementById("info");
 
-        if(error === null){
-            oldData = intercomData;
-
+        if(error === null && intercomData!==null){
             let installType, userInfo, appInfo, compInfo;
-            if (oldData.install[0] === "s") {
-                console.log("Installed with Segment");
+            if (intercomData.install[0] === "s") {
                 installType = "Segment.io";
             } else {
                 installType = "Intercom script";
             }
 
-            appInfo = `App ID: ${oldData.app_id}`;
+            appInfo = `App ID: ${intercomData.app_id}`;
 
-            if (typeof oldData.user_id === "undefined") {
+            if (typeof intercomData.user_id === "undefined") {
                 userInfo = "Current user is a lead";
             } else {
-                userInfo = `User Name: ${oldData.name} Email: ${oldData.email} User ID: ${oldData.user_id}`;
+                userInfo = `User Name: ${intercomData.name} Email: ${intercomData.email} User ID: ${intercomData.user_id}`;
             }
 
             if (oldData.comp_id !== null) {
-                compInfo = `Company Name: ${oldData.comp_name}<br>Company ID: ${oldData.comp_id}`;
+                compInfo = `Company Name: ${intercomData.comp_name} Company ID: ${intercomData.comp_id}`;
             } else {
                 compInfo = "User has no company information.";
             }
-            
+
             let table = d.createElement("table");
             let tableHead = d.createElement("thead");
             let tableBody = d.createElement("tbody");
@@ -155,7 +145,6 @@ window.addEventListener('DOMContentLoaded', function () {
             let url = JSON.stringify(errors[i].url);
             let error = JSON.stringify(errors[i].error);
             if(lastUrl!==url && lastError!==error){
-                console.log("URL and error are different. Assigning...");
                 lastUrl = url;
                 lastError = error;
             }else{
@@ -168,13 +157,11 @@ window.addEventListener('DOMContentLoaded', function () {
 
 
     infoButton.addEventListener("click", function(e){
-        console.log("Sending message to update Intercom");
-        chrome.runtime.sendMessage({update: "update"});
         if(intercomData!== null){
             $("#info").empty();
             populate(null, intercomData);
-            console.log("Update: "+ JSON.stringify(intercomData));
         }else{
+            $("#info").empty();
             populate(err, null);
         }
         openTab(e, 'info');
@@ -184,6 +171,8 @@ window.addEventListener('DOMContentLoaded', function () {
         if(!headers.length<=0){
             $("#status").empty();
             populateStatus(headers);
+        }else{
+            $("#status").empty();
         }
         openTab(e, 'status');
     });
@@ -192,6 +181,8 @@ window.addEventListener('DOMContentLoaded', function () {
         if(!errors.length<=0){
             $("#error").empty();
             populateErrors(errors);
+        }else{
+            $("#error").empty();
         }
         openTab(e, 'error');
     });
@@ -213,34 +204,24 @@ window.addEventListener('DOMContentLoaded', function () {
     });
 
     chrome.runtime.sendMessage({request: "checkData"}, function(response) {
-        console.log("Checking data...");
         if (response.done) {
-            console.log("Data found");
-            console.log(response.intercomData);
             intercomData = response.intercomData;
             if(intercomData!== null){
-                console.log("Intercom Data: " + JSON.stringify(intercomData));
                 infoLoader.style.visibility = "hidden";
                 oldData = intercomData;
                 populate(null, intercomData);
             }
-        }else{
-            console.log("Data not found yet");
         }
     });
 
 
     chrome.runtime.sendMessage({request: "checkStatus"}, function(response){
-        console.log("Checking status...");
         if(response.done){
             headers = response.headers;
             if(status!==null){
-                console.log("Status found: " + status);
                 statusLoader.style.visibility = "hidden";
                 populateStatus(headers);
             }
-        }else{
-            console.log("Status not received..");
         }
     });
 
@@ -251,15 +232,12 @@ window.addEventListener('DOMContentLoaded', function () {
                 statusLoader.style.visibility = "hidden";
                 populateErrors(errors);
             }
-        }else{
-            console.log("Status not received..");
         }
     });
 
 
     chrome.runtime.onMessage.addListener(function(message){
         if(message.message==="error"){
-            console.log("Error occurred: " + message.error);
             err = message.error;
             populate(err, null);
         }

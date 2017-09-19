@@ -52,10 +52,8 @@ chrome.runtime.onMessage.addListener(function(message){
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if (message.request === "checkData") {
     	if(!postComplete){
-    		console.log("Post not yet complete...");
             sendResponse({done: postComplete});
     	}else{
-            console.log("Task complete");
             sendResponse({done: postComplete, intercomData: intercomData});
 		}
 	}
@@ -65,11 +63,8 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse){
    if(message.request === "checkStatus"){
        if(!statusComplete){
-           console.log("Status not found...");
            sendResponse({done: statusComplete});
        }else{
-           console.log("Status found");
-           console.log(headers);
            sendResponse({done: statusComplete, headers: headers});
        }
 
@@ -79,11 +74,8 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse){
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse){
     if(message.request === "checkError"){
         if(!errorComplete){
-            console.log("Error not found...");
             sendResponse({done: errorComplete});
         }else{
-            console.log("Error found");
-            console.log(headers);
             sendResponse({done: errorComplete, errors: errors});
         }
 
@@ -92,14 +84,10 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse){
 
 chrome.webRequest.onBeforeRequest.addListener(
 	function (details){
-        console.log("In on before request");
         const FORM_DATA = details["requestBody"]["formData"];
-        console.log(FORM_DATA);
 		const USER_DATA = JSON.parse(FORM_DATA["user_data"]);
-		console.log(USER_DATA);
 		const COMP_DATA = USER_DATA["company"];
 		if(details.method==="POST"){
-
 			let install = FORM_DATA["i"];
 			let app_id = FORM_DATA["app_id"];
 			
@@ -111,12 +99,9 @@ chrome.webRequest.onBeforeRequest.addListener(
 			let comp_name = null;
 			
 			if(typeof COMP_DATA !== "undefined") {
-                console.log("Company data isn't undefined");
                 comp_id = COMP_DATA["id_code"];
                 comp_name = COMP_DATA["name"];
-            }else{
-				console.log("Company data is undefined");
-			}
+            }
 			intercomData = {
 				install: install,
 				app_id: app_id,
@@ -126,7 +111,6 @@ chrome.webRequest.onBeforeRequest.addListener(
 				comp_id: comp_id,
 				comp_name: comp_name
 			};
-			console.log(intercomData);
 			postComplete = true;
 		}
 	}, 
