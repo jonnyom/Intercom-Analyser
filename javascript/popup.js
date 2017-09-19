@@ -1,21 +1,20 @@
 let d = document;
 let oldData = null;
 let intercomData = null;
-let status = null;
+let err = null;
 
 window.addEventListener('DOMContentLoaded', function () {
-    console.log("Dom Ready");
-
-
-
     let infoLoader = d.getElementById("infoLoader");
     let statusLoader = d.getElementById("statusLoader");
 
     let infoButton = d.getElementById("informationButton");
     let statusButton = d.getElementById("statusButton");
+    let errorButton = d.getElementById("errorButton");
+    let functionButton = d.getElementById("functionButton");
 
     let updateBtn = d.getElementById("updateBtn");
-
+    let shtdwnBtn = d.getElementById("shtdwnBtn");
+    let bootBtn = d.getElementById("bootBtn");
 
     function openTab(evt, tabName) {
         // Declare all variables
@@ -38,11 +37,23 @@ window.addEventListener('DOMContentLoaded', function () {
         evt.currentTarget.className += " active";
     }
 
-    function populateStatus(status){
+    function populateStatus(headers){
         let statusDiv = d.getElementById("status");
-        let h4Status = d.createElement("h3");
-        h4Status.textContent = status;
-        statusDiv.appendChild(h4Status);
+        let lastUrl = null;
+        let lastStatus = null;
+        for(let i = 0; i<headers.length; i++){
+            let details = d.createElement("p");
+            let url = JSON.stringify(headers[i].url);
+            let status = JSON.stringify(headers[i].statusCode);
+            if(lastUrl!==url && lastStatus!==status){
+                lastUrl = url;
+                lastStatus = status;
+            }else{
+                continue;
+            }
+            details.textContent = url + ": " + status;
+            statusDiv.appendChild(details);
+        }
     }
 
     function populateRows(body, installType, appInfo, userInfo, compInfo){
@@ -69,138 +80,188 @@ window.addEventListener('DOMContentLoaded', function () {
         return body;
     }
 
-    function populate(intercomData) {
-        oldData = intercomData;
-
-        let installType, userInfo, appInfo, compInfo;
-        if (oldData.install[0] === "s") {
-            console.log("Installed with Segment");
-            installType = "Segment.io";
-        } else {
-            installType = "Intercom script";
-        }
-
-        appInfo = `App ID: ${oldData.app_id}`;
-
-        if (typeof oldData.user_id === "undefined") {
-            userInfo = "Current user is a lead";
-        } else {
-            userInfo = `User Name: ${oldData.name}<br>Email: ${oldData.email}<br>User ID: ${oldData.user_id}`;
-        }
-
-        if (oldData.comp_id !== null) {
-            compInfo = `Company Name: ${oldData.comp_name}<br>Company ID: ${oldData.comp_id}`;
-        } else {
-            compInfo = "User has no company information.";
-        }
-
+    function populate(error, intercomData) {
         let infoDiv = d.getElementById("info");
-        let table = d.createElement("table");
-        let tableHead = d.createElement("thead");
-        let tableBody = d.createElement("tbody");
 
-        table.border = ".5";
+        if(error === null){
+            oldData = intercomData;
 
-        let trHead = d.createElement("tr");
+            let installType, userInfo, appInfo, compInfo;
+            if (oldData.install[0] === "s") {
+                console.log("Installed with Segment");
+                installType = "Segment.io";
+            } else {
+                installType = "Intercom script";
+            }
 
-        let thInstall = d.createElement("th");
-        let thAppId = d.createElement("th");
-        let thUserInfo = d.createElement("th");
-        let thCompInfo = d.createElement("th");
+            appInfo = `App ID: ${oldData.app_id}`;
 
-        thInstall.textContent = "Installation";
-        thAppId.textContent = "App ID";
-        thUserInfo.textContent = "User Information";
-        thCompInfo.textContent = "Company Information";
+            if (typeof oldData.user_id === "undefined") {
+                userInfo = "Current user is a lead";
+            } else {
+                userInfo = `User Name: ${oldData.name} Email: ${oldData.email} User ID: ${oldData.user_id}`;
+            }
 
-        trHead.appendChild(thInstall);
-        trHead.appendChild(thAppId);
-        trHead.appendChild(thUserInfo);
-        trHead.appendChild(thCompInfo);
+            if (oldData.comp_id !== null) {
+                compInfo = `Company Name: ${oldData.comp_name}<br>Company ID: ${oldData.comp_id}`;
+            } else {
+                compInfo = "User has no company information.";
+            }
+            
+            let table = d.createElement("table");
+            let tableHead = d.createElement("thead");
+            let tableBody = d.createElement("tbody");
 
-        tableHead.appendChild(trHead);
+            table.border = ".5";
 
-        tableBody = populateRows(tableBody, installType, appInfo, userInfo, compInfo);
+            let trHead = d.createElement("tr");
 
-        table.appendChild(tableHead);
-        table.appendChild(tableBody);
+            let thInstall = d.createElement("th");
+            let thAppId = d.createElement("th");
+            let thUserInfo = d.createElement("th");
+            let thCompInfo = d.createElement("th");
 
-        infoDiv.appendChild(table);
+            thInstall.textContent = "Installation";
+            thAppId.textContent = "App ID";
+            thUserInfo.textContent = "User Information";
+            thCompInfo.textContent = "Company Information";
+
+            trHead.appendChild(thInstall);
+            trHead.appendChild(thAppId);
+            trHead.appendChild(thUserInfo);
+            trHead.appendChild(thCompInfo);
+
+            tableHead.appendChild(trHead);
+
+            tableBody = populateRows(tableBody, installType, appInfo, userInfo, compInfo);
+
+            table.appendChild(tableHead);
+            table.appendChild(tableBody);
+
+            infoDiv.appendChild(table);
+        }else{
+            let err = d.createElement('p');
+            err.textContent = error;
+            infoDiv.appendChild(err);
+        }
     }
 
-    function populateError(){
-        let infoDiv = d.getElementById("info");
-
-        let pInfo = d.createElement("p");
-        pInfo.textContent = "Intercom hasn't been booted on this page...";
-        infoDiv.appendChild(pInfo);
+    function populateErrors(errors){
+        let errorDiv = d.getElementById("error");
+        let lastUrl = null;
+        let lastError = null;
+        for(let i = 0; i<errors.length; i++){
+            let details = d.createElement("p");
+            let url = JSON.stringify(errors[i].url);
+            let error = JSON.stringify(errors[i].error);
+            if(lastUrl!==url && lastError!==error){
+                console.log("URL and error are different. Assigning...");
+                lastUrl = url;
+                lastError = error;
+            }else{
+                continue;
+            }
+            details.textContent = url + ": " + error;
+            errorDiv.appendChild(details);
+        }
     }
 
 
     infoButton.addEventListener("click", function(e){
         console.log("Sending message to update Intercom");
-        chrome.runtime.sendMessage({update: "update_intercom"});
+        chrome.runtime.sendMessage({update: "update"});
         if(intercomData!== null){
-            checkData();
+            $("#info").empty();
+            populate(null, intercomData);
             console.log("Update: "+ JSON.stringify(intercomData));
         }else{
-            populateError();
+            populate(err, null);
         }
         openTab(e, 'info');
     });
 
     statusButton.addEventListener("click", function(e){
-        checkStatus();
+        if(!headers.length<=0){
+            $("#status").empty();
+            populateStatus(headers);
+        }
         openTab(e, 'status');
     });
 
-    updateBtn.addEventListener("click", function(){
-        chrome.runtime.sendMessage({update: "update_intercom"});
+    errorButton.addEventListener("click", function(e){
+        if(!errors.length<=0){
+            $("#error").empty();
+            populateErrors(errors);
+        }
+        openTab(e, 'error');
     });
 
-    function checkData(){
-        chrome.runtime.sendMessage({request: "checkData"}, function(response) {
-            console.log("Checking data...");
-            if (response.done) {
-                console.log("Data found");
-                console.log(response.intercomData);
-                intercomData = response.intercomData;
-                if(intercomData!== null){
-                    console.log("Intercom Data: " + JSON.stringify(intercomData));
-                    infoLoader.style.visibility = "hidden";
-                    oldData = intercomData;
-                    populate(intercomData);
-                }
-            }else{
-                console.log("Data not found yet");
-            }
-        });
-    }
+    functionButton.addEventListener("click", function(e){
+       openTab(e, 'functions');
+    });
 
-    function checkStatus(){
-        chrome.runtime.sendMessage({request: "checkStatus"}, function(response){
-            console.log("Checking status...");
-            if(response.done){
-                status = response.status;
-                if(status!==null){
-                    console.log("Status found: " + status);
-                    statusLoader.style.visibility = "hidden";
-                    populateStatus(status);
-                }
-            }else{
-                console.log("Status not received..");
-            }
+    updateBtn.addEventListener("click", function(){
+        chrome.runtime.sendMessage({method: "update"});
+    });
 
-        });
-    }
+    shtdwnBtn.addEventListener("click", function(){
+        chrome.runtime.sendMessage({method: "shutdown"});
+    });
+
+    bootBtn.addEventListener("click", function(){
+        chrome.runtime.sendMessage({method: "boot"});
+    });
+
+    chrome.runtime.sendMessage({request: "checkData"}, function(response) {
+        console.log("Checking data...");
+        if (response.done) {
+            console.log("Data found");
+            console.log(response.intercomData);
+            intercomData = response.intercomData;
+            if(intercomData!== null){
+                console.log("Intercom Data: " + JSON.stringify(intercomData));
+                infoLoader.style.visibility = "hidden";
+                oldData = intercomData;
+                populate(null, intercomData);
+            }
+        }else{
+            console.log("Data not found yet");
+        }
+    });
+
+
+    chrome.runtime.sendMessage({request: "checkStatus"}, function(response){
+        console.log("Checking status...");
+        if(response.done){
+            headers = response.headers;
+            if(status!==null){
+                console.log("Status found: " + status);
+                statusLoader.style.visibility = "hidden";
+                populateStatus(headers);
+            }
+        }else{
+            console.log("Status not received..");
+        }
+    });
+
+    chrome.runtime.sendMessage({request: "checkError"}, function(response){
+        if(response.done){
+            errors = response.errors;
+            if(!errors.length<=0){
+                statusLoader.style.visibility = "hidden";
+                populateErrors(errors);
+            }
+        }else{
+            console.log("Status not received..");
+        }
+    });
+
 
     chrome.runtime.onMessage.addListener(function(message){
-        if(message.message==="not_defined" && message.booted === false){
-            console.log("Intercom not installed on current page")
-            populateError();
+        if(message.message==="error"){
+            console.log("Error occurred: " + message.error);
+            err = message.error;
+            populate(err, null);
         }
-    })
-
-    checkData();
-    checkStatus();
+    });
 });

@@ -10,23 +10,35 @@ function injectScript(file, node) {
 chrome.runtime.onMessage.addListener(
 	function(request, sender, sendResponse) {
 	  	console.log(request.message);
-	    if( request.message === "check_for_update") {
+	    if( request.message === "update") {
 	    	console.log("Received Message from Background");
-		    injectScript(chrome.extension.getURL('javascript/inject.js'), 'body');
+		    injectScript(chrome.extension.getURL('javascript/functions/update.js'), 'body');
 		    console.log("Injecting script...");
 		    sendResponse({pong: true});
 	    }
 	}
 );
 
-chrome.extension.onMessage.addListener(function(message){
-	if(message.message === "intercomsettings_data"){
-		chrome.runtime.sendMessage({message: "intercomsettings_data_content",
-			intercomData: message.intercomData});
-	}
-});
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+        console.log(request.message);
+        if( request.message === "shutdown") {
+            console.log("Received Message from Background");
+            injectScript(chrome.extension.getURL('javascript/functions/shutdown.js'), 'body');
+            console.log("Injecting script...");
+            sendResponse({pong: true});
+        }
+    }
+);
 
-//if the html hasn't yet been populated query the background file again to try and get the information
-// keep polling the background file until the information has been received
-// display some sort of loading screen while the html page doesn't load properly
-// profit
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+        console.log(request.message);
+        if( request.message === "boot") {
+            console.log("Received Message from Background");
+            injectScript(chrome.extension.getURL('javascript/functions/boot.js'), 'body');
+            console.log("Injecting script...");
+            sendResponse({pong: true});
+        }
+    }
+);

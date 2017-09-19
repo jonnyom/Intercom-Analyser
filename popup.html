@@ -6,8 +6,10 @@
         <title></title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="javascript/jquery.min.js"></script>
         <script src="javascript/popup.js"></script>
         <script src="javascript/background.js"></script>
+
         <link rel="stylesheet" href="styles/popup.css" media="screen" type="text/css">
     </head>
     <body>
@@ -15,20 +17,30 @@
             <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
 
-
         <div class="tab">
             <button class="tablinks" id="informationButton">Information</button>
             <button class="tablinks" id="statusButton">Status</button>
+            <button class="tablinks" id="errorButton">Error</button>
+            <button class="tablinks" id="functionButton">Functions</button>
         </div>
 
         
         <div id="info" class="tabcontent">
             <div class="loader" id="infoLoader"></div>
-            <button id="updateBtn">Update Intercom</button>
         </div>
 
         <div id="status" class="tabcontent">
             <div class="loader" id="statusLoader"></div>
+        </div>
+
+        <div id="error" class="tabcontent">
+            <div class="loader" id="errorLoader"></div>
+        </div>
+
+        <div id="functions" class="tabcontent">
+            <button id="updateBtn">Update Intercom</button>
+            <button id="shtdwnBtn">Shutdown Intercom</button>
+            <button id="bootBtn">Boot Intercom</button>
         </div>
 
     </body>        
