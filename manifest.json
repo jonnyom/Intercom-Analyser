@@ -29,6 +29,7 @@
 	},
 
 	"permissions": [
+		"debugger",
         "tabs", "<all_urls>",
         "webRequest",
         "webRequestBlocking",

@@ -1,13 +1,18 @@
 let ping_filter = {urls: ["*://*.intercom.io/messenger/web/ping"]};
 let err_filter = {urls: ["*://*.intercom.io/*", "*://*.intercom.com/*"]}
 let out_extraInfoSpec = ["blocking", "requestBody"];
+let version = "1.0";
 
 let postComplete = false;
 let statusComplete = false;
 let errorComplete = false;
+let urlComplete = true;
 
 let headers = [];
 let errors = [];
+
+let url;
+let currentTab;
 
 function ensureSendMessage(tabId, message, callback){
   	chrome.tabs.sendMessage(tabId, {ping: true}, function(response){
@@ -51,10 +56,10 @@ chrome.runtime.onMessage.addListener(function(message){
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if (message.request === "checkData") {
-    	if(!postComplete){
+    	if(!postComplete && !urlComplete){
             sendResponse({done: postComplete});
     	}else{
-            sendResponse({done: postComplete, intercomData: intercomData});
+				sendResponse({done: postComplete, intercomData: intercomData});
 		}
 	}
 	return true;
@@ -65,7 +70,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse){
        if(!statusComplete){
            sendResponse({done: statusComplete});
        }else{
-           sendResponse({done: statusComplete, headers: headers});
+				 sendResponse({done: statusComplete, headers: headers});
        }
 
    }
@@ -84,9 +89,10 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse){
 
 chrome.webRequest.onBeforeRequest.addListener(
 	function (details){
-        const FORM_DATA = details["requestBody"]["formData"];
+		const FORM_DATA = details["requestBody"]["formData"];
 		const USER_DATA = JSON.parse(FORM_DATA["user_data"]);
 		const COMP_DATA = USER_DATA["company"];
+
 		if(details.method==="POST"){
 			let install = FORM_DATA["i"];
 			let app_id = FORM_DATA["app_id"];
@@ -99,9 +105,10 @@ chrome.webRequest.onBeforeRequest.addListener(
 			let comp_name = null;
 			
 			if(typeof COMP_DATA !== "undefined") {
-                comp_id = COMP_DATA["id_code"];
-                comp_name = COMP_DATA["name"];
-            }
+				comp_id = COMP_DATA["id"];
+				comp_name = COMP_DATA["name"];
+			}
+
 			intercomData = {
 				install: install,
 				app_id: app_id,
@@ -111,20 +118,12 @@ chrome.webRequest.onBeforeRequest.addListener(
 				comp_id: comp_id,
 				comp_name: comp_name
 			};
+
 			postComplete = true;
 		}
 	}, 
 	ping_filter, 
 	out_extraInfoSpec
-);
-
-
-chrome.webRequest.onHeadersReceived.addListener(
-	function(details){
-		headers.push(details);
-		statusComplete = true;
-	}, 
-	err_filter
 );
 
 chrome.webRequest.onErrorOccurred.addListener(

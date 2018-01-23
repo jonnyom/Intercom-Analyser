@@ -8,7 +8,6 @@ window.addEventListener('DOMContentLoaded', function () {
     let statusLoader = d.getElementById("statusLoader");
 
     let infoButton = d.getElementById("informationButton");
-    let statusButton = d.getElementById("statusButton");
     let errorButton = d.getElementById("errorButton");
     let functionButton = d.getElementById("functionButton");
 
@@ -37,26 +36,43 @@ window.addEventListener('DOMContentLoaded', function () {
         evt.currentTarget.className += " active";
     }
 
-    function populateStatus(headers){
+    function populateStatus(headers) {
         let statusDiv = d.getElementById("status");
-        for(let i = 0; i<headers.length; i++){
-            let details = d.createElement("p");
+        let details = d.createElement("p");
+        let lastUrl = null;
+        let lastStatus = null;
+        for (let i = 0; i < headers.length; i++) {
             let url = JSON.stringify(headers[i].url);
+            if (!url.includes("intercomrades")) {
+                console.log("Contains intercomrades");
+                continue;
+            }
             let status = JSON.stringify(headers[i].statusCode);
             let method = JSON.stringify(headers[i].method);
+            if (lastStatus !== status || lastUrl !== url) {
+                lastStatus = status;
+                lastUrl = url;
+            } else {
+                continue;
+            }
             details.textContent = url + ": " + status + " method: " + method;
             statusDiv.appendChild(details);
         }
     }
+
 
     function populateRows(body, installType, appInfo, userInfo, compInfo){
 
         let trBody = d.createElement("tr");
 
         let tdInstall = d.createElement("td");
+            tdInstall.className = "text-left";
         let tdAppID = d.createElement("td");
+            tdInstall.className = "text-left";
         let tdUserInfo = d.createElement("td");
+            tdInstall.className = "text-left";
         let tdCompInfo = d.createElement("td");
+            tdInstall.className = "text-left";
 
         tdInstall.textContent = installType;
         tdAppID.textContent = appInfo;
@@ -86,23 +102,24 @@ window.addEventListener('DOMContentLoaded', function () {
 
             appInfo = `App ID: ${intercomData.app_id}`;
 
-            if (typeof intercomData.user_id === "undefined") {
+            if (typeof intercomData.user_id === "undefined" && typeof intercomData.email === "undefined") {
                 userInfo = "Current user is a lead";
             } else {
                 userInfo = `User Name: ${intercomData.name} Email: ${intercomData.email} User ID: ${intercomData.user_id}`;
             }
 
-            if (oldData.comp_id !== null) {
+            if (intercomData.comp_id !== null) {
                 compInfo = `Company Name: ${intercomData.comp_name} Company ID: ${intercomData.comp_id}`;
             } else {
                 compInfo = "User has no company information.";
             }
 
             let table = d.createElement("table");
+            table.className = "table-fill";
             let tableHead = d.createElement("thead");
+            tableHead.className = "text-left";
             let tableBody = d.createElement("tbody");
-
-            table.border = ".5";
+            tableBody.className = "table-hover";
 
             let trHead = d.createElement("tr");
 
@@ -131,6 +148,7 @@ window.addEventListener('DOMContentLoaded', function () {
             infoDiv.appendChild(table);
         }else{
             let err = d.createElement('p');
+
             err.textContent = error;
             infoDiv.appendChild(err);
         }
@@ -167,23 +185,8 @@ window.addEventListener('DOMContentLoaded', function () {
         openTab(e, 'info');
     });
 
-    statusButton.addEventListener("click", function(e){
-        if(!headers.length<=0){
-            $("#status").empty();
-            populateStatus(headers);
-        }else{
-            $("#status").empty();
-        }
-        openTab(e, 'status');
-    });
-
     errorButton.addEventListener("click", function(e){
-        if(!errors.length<=0){
-            $("#error").empty();
-            populateErrors(errors);
-        }else{
-            $("#error").empty();
-        }
+        populateErrors(errors);
         openTab(e, 'error');
     });
 
@@ -210,17 +213,6 @@ window.addEventListener('DOMContentLoaded', function () {
                 infoLoader.style.visibility = "hidden";
                 oldData = intercomData;
                 populate(null, intercomData);
-            }
-        }
-    });
-
-
-    chrome.runtime.sendMessage({request: "checkStatus"}, function(response){
-        if(response.done){
-            headers = response.headers;
-            if(status!==null){
-                statusLoader.style.visibility = "hidden";
-                populateStatus(headers);
             }
         }
     });
